@@ -1,0 +1,24 @@
+logLevel = "INFO"
+defaultEntryPoints = ["http"]
+
+
+[web]
+  address = ":8080"
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+
+[file]
+[backends]
+  [backends.fastapi]
+    [backends.fastapi.servers.server1]
+      url = "http://fastapi:8000"
+
+[frontends]
+  [frontends.fastapi]
+    backend = "fastapi"
+    passHostHeader = true
+    [frontends.fastapi.headers]
+      HostsProxyHeaders = ['X-CSRFToken']
+
