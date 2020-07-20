@@ -1,0 +1,12 @@
+server.host: "0"
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+
+kibana.index: ".kibana"
+kibana.defaultAppId: "home"
+
+elasticsearch.username: "elastic"
+elasticsearch.password: "test"
+
+xpack.spaces.enabled: false
+monitoring.kibana.collection.enabled: true
+xpack.monitoring.ui.container.elasticsearch.enabled: false

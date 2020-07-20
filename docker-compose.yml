@@ -1,24 +1,10 @@
 version: "2"
+
+volumes:
+  redis-data: {}
+  production_traefik: {}
+
 services:
-  rabbit:
-    image: rabbitmq:3.8.3-management
-    ports:
-      - "15672:15672"
-    hostname: rabbitmq
-    restart: on-failure
-
-  redis:
-    image: redis:5.0.5
-    ports:
-      - "6379:6379"
-    expose:
-      - "6379"
-    command: ["redis-server", "--appendonly", "yes"]
-    hostname: redis
-    restart: on-failure
-    volumes:
-      - redis-data:/data
-
   fastapi:
     build:
       context: microservices/fastapi
@@ -30,6 +16,19 @@ services:
   ml-service:
     build:
       context: microservices/ml-service
+    links:
+      - rabbit
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
+
+  dash-service:
+    build:
+      context: microservices/dash-service
     links:
       - rabbit
     environment:
@@ -52,6 +51,7 @@ services:
   #     RABBIT_USER: "guest"
   #     RABBIT_HOST: "rabbit"
   #     RABBIT_PORT: "5672"
+
   traefik:
     build:
       context: .
@@ -64,6 +64,93 @@ services:
       - "80:80"
       - "8080:8080"
 
-volumes:
-  redis-data: {}
-  production_traefik: {}
+  rabbit:
+    image: rabbitmq:3.8.3-management
+    ports:
+      - "15672:15672"
+    hostname: rabbitmq
+    restart: on-failure
+
+  redis:
+    image: redis:5.0.5
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    restart: on-failure
+    volumes:
+      - redis-data:/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=test
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - "./esdata:/usr/share/elasticsearch/data"
+    ports:
+      - "9200:9200"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.8.0
+    volumes:
+      - "./elk_configs/kibana.yml:/usr/share/kibana/config/kibana.yml"
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    links:
+      - elasticsearch
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.8.0
+    volumes:
+      - "./elk_configs/logstash.conf:/config-dir/logstash.conf"
+    restart: unless-stopped
+    command: logstash -f /config-dir/logstash.conf
+    ports:
+      - "9600:9600"
+      - "7777:7777"
+    links:
+      - elasticsearch
+      - kafka
+
+  kafka:
+    image: confluentinc/cp-kafka:5.2.0
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.2.0
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    expose:
+      - "2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
