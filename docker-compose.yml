@@ -26,23 +26,10 @@ services:
       RABBIT_HOST: "rabbit"
       RABBIT_PORT: "5672"
 
-  dash-service:
-    build:
-      context: microservices/dash-service
-    links:
-      - rabbit
-    environment:
-      REDIS_HOST: "redis"
-      REDIS_PORT: "6379"
-      RABBIT_PASSWORD: "guest"
-      RABBIT_USER: "guest"
-      RABBIT_HOST: "rabbit"
-      RABBIT_PORT: "5672"
-
-  # db-service:
+  # dash-service:
   #   build:
-  #     context: microservices/db-service
-  #   depends_on:
+  #     context: microservices/dash-service
+  #   links:
   #     - rabbit
   #   environment:
   #     REDIS_HOST: "redis"
@@ -51,6 +38,19 @@ services:
   #     RABBIT_USER: "guest"
   #     RABBIT_HOST: "rabbit"
   #     RABBIT_PORT: "5672"
+
+  db-service:
+    build:
+      context: microservices/db-service
+    depends_on:
+      - rabbit
+    environment:
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      RABBIT_PASSWORD: "guest"
+      RABBIT_USER: "guest"
+      RABBIT_HOST: "rabbit"
+      RABBIT_PORT: "5672"
 
   traefik:
     build:
@@ -64,12 +64,26 @@ services:
       - "80:80"
       - "8080:8080"
 
+  hbase:
+    image: dajobe/hbase
+    ports:
+      - "16010:16010"
+      - "8085:8085"
+      - "9095:9095"
+    expose:
+      - "8080"
+      - "9090"
+      - "16010"
+      - "9095"
+      - "8085"
+    restart: unless-stopped
+
   rabbit:
     image: rabbitmq:3.8.3-management
     ports:
       - "15672:15672"
     hostname: rabbitmq
-    restart: on-failure
+    restart: unless-stopped
 
   redis:
     image: redis:5.0.5
@@ -79,53 +93,53 @@ services:
       - "6379"
     command: ["redis-server", "--appendonly", "yes"]
     hostname: redis
-    restart: on-failure
+    restart: unless-stopped
     volumes:
       - redis-data:/data
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
-    restart: unless-stopped
-    environment:
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=test
-      - cluster.name=docker-cluster
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 1g
-    volumes:
-      - "./esdata:/usr/share/elasticsearch/data"
-    ports:
-      - "9200:9200"
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.8.0
-    volumes:
-      - "./elk_configs/kibana.yml:/usr/share/kibana/config/kibana.yml"
-    restart: unless-stopped
-    ports:
-      - "5601:5601"
-    links:
-      - elasticsearch
-    depends_on:
-      - elasticsearch
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+  #   restart: unless-stopped
+  #   environment:
+  #     - discovery.type=single-node
+  #     - ELASTIC_PASSWORD=test
+  #     - cluster.name=docker-cluster
+  #     - bootstrap.memory_lock=true
+  #     - xpack.security.enabled=false
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   mem_limit: 1g
+  #   volumes:
+  #     - "./esdata:/usr/share/elasticsearch/data"
+  #   ports:
+  #     - "9200:9200"
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:7.8.0
+  #   volumes:
+  #     - "./elk_configs/kibana.yml:/usr/share/kibana/config/kibana.yml"
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5601:5601"
+  #   links:
+  #     - elasticsearch
+  #   depends_on:
+  #     - elasticsearch
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.8.0
-    volumes:
-      - "./elk_configs/logstash.conf:/config-dir/logstash.conf"
-    restart: unless-stopped
-    command: logstash -f /config-dir/logstash.conf
-    ports:
-      - "9600:9600"
-      - "7777:7777"
-    links:
-      - elasticsearch
-      - kafka
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:7.8.0
+  #   volumes:
+  #     - "./elk_configs/logstash.conf:/config-dir/logstash.conf"
+  #   restart: unless-stopped
+  #   command: logstash -f /config-dir/logstash.conf
+  #   ports:
+  #     - "9600:9600"
+  #     - "7777:7777"
+  #   links:
+  #     - elasticsearch
+  #     - kafka
 
   kafka:
     image: confluentinc/cp-kafka:5.2.0
