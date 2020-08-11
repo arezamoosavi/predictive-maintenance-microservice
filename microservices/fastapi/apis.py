@@ -1,8 +1,9 @@
+import os
+import json
+
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel, conlist
 from nameko.standalone.rpc import ServiceRpcProxy
-import os
-import json
 
 
 def rpc_proxy():
@@ -33,4 +34,4 @@ async def predict(sent_data: DataModel):
         return {"messege": "Successfully Done!", "response": json.loads(prediction)}
     except Exception as e:
         print("EXECPTION: ", e)
-        return {"messege": "Error!", "response": "Error!"}
+        return {"messege": e, "response": "Error!"}

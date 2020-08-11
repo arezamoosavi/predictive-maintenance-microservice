@@ -1,0 +1,4 @@
+RMQ=amqp://guest:guest@rabbit:5672/
+REDIS=redis://redis:6379/1
+PORT=8000
+HOST=0.0.0.0

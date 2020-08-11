@@ -11,7 +11,7 @@ services:
     links:
       - rabbit
     env_file:
-      - ./microservices/fastapi/.env
+      - ./microservices/fastapi/.fastapi_env
 
   ml-service:
     build:
@@ -61,7 +61,7 @@ services:
     volumes:
       - production_traefik:/etc/traefik/acme
     ports:
-      - "80:80"
+      - "5000:5000"
       - "8080:8080"
 
   hbase:
@@ -96,7 +96,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis-data:/data
-
   # elasticsearch:
   #   image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
   #   restart: unless-stopped
@@ -127,7 +126,6 @@ services:
   #     - elasticsearch
   #   depends_on:
   #     - elasticsearch
-
   # logstash:
   #   image: docker.elastic.co/logstash/logstash:7.8.0
   #   volumes:
@@ -140,31 +138,29 @@ services:
   #   links:
   #     - elasticsearch
   #     - kafka
-
-  kafka:
-    image: confluentinc/cp-kafka:5.2.0
-    restart: unless-stopped
-    depends_on:
-      - zookeeper
-    links:
-      - zookeeper
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  zookeeper:
-    image: confluentinc/cp-zookeeper:5.2.0
-    hostname: zookeeper
-    ports:
-      - "2181:2181"
-    expose:
-      - "2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    restart: unless-stopped
+  # kafka:
+  #   image: confluentinc/cp-kafka:5.2.0
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - zookeeper
+  #   links:
+  #     - zookeeper
+  #   ports:
+  #     - "9092:9092"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:5.2.0
+  #   hostname: zookeeper
+  #   ports:
+  #     - "2181:2181"
+  #   expose:
+  #     - "2181"
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   restart: unless-stopped

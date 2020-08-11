@@ -7,7 +7,7 @@ defaultEntryPoints = ["http"]
 
 [entryPoints]
   [entryPoints.http]
-  address = ":80"
+  address = ":5000"
 
 [file]
 [backends]

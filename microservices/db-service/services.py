@@ -1,17 +1,40 @@
+import os
 import uuid
 import json
 import eventlet
+from datetime import datetime
 from eventlet.event import Event
 from nameko.rpc import rpc
 from nameko.extensions import DependencyProvider
 
+import happybase
+
+
+def get_hbase_table(table_name):
+    connection = happybase.Connection(host="hbase", port=9090, autoconnect=True)
+    table = connection.table(table_name)
+    return table
+
 
 def save_to_hbase(data):
-    try:
-        return True
-    except Exception as e:
-        print(e)
-        return False
+    table = get_hbase_table("nasa-data")
+    now = datetime.now()
+    timestamp = datetime.timestamp(now)
+    date_row = now.isoformat()
+    dict_data = json.loads(data)
+
+    print(data, type(data))
+    with table.batch(timestamp=int(timestamp), transaction=True) as batch:
+        batch.put(
+            date_row,
+            {
+                "s:data": " ".join(str(e) for e in dict_data["data"]),
+                "s:life_cycle": str(dict_data["life_cycle"]),
+                "s:task_id": str(dict_data["task_id"]),
+            },
+        )
+
+    return True
 
 
 class SaveHbase(DependencyProvider):

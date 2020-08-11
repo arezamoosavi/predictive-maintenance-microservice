@@ -10,4 +10,7 @@ until nc -z ${REDIS_HOST} ${REDIS_PORT}; do
     sleep 1
 done
 
+
+while python create_table.py; do echo 'connecting to database...'; sleep 2; done;
+
 nameko run --config config.yml services

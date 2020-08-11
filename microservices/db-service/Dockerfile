@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY config.yml ./
 COPY run.sh ./
 COPY services.py ./
+COPY create_table.py ./
 
 RUN chmod +x ./run.sh
 
