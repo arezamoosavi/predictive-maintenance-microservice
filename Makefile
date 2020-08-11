@@ -1,4 +1,4 @@
-topic-create:
+create-topic:
 	docker-compose exec kafka kafka-topics --create \
 	--topic nasa-sensor-data --if-not-exists \
 	kafka:9092 --replication-factor 1 --partitions 1 \

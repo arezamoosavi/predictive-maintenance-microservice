@@ -48,7 +48,7 @@ class PredictLife(DependencyProvider):
 class MLService(object):
     name = "mltask"
 
-    # dash_rpc = RpcProxy("dashtask")
+    dash_rpc = RpcProxy("dashtask")
     db_rpc = RpcProxy("dbtask")
 
     processor = PredictLife()
@@ -57,7 +57,7 @@ class MLService(object):
     def get_predict(self, data):
         result = self.processor.predict(data)
 
-        # self.dash_rpc.send_the_data_to_kafka(result)
+        self.dash_rpc.send_the_data_to_kafka(result)
         self.db_rpc.save_the_data_to_hbase(result)
 
         return result

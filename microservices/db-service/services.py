@@ -20,14 +20,14 @@ def all_data_hbase(table_name):
     table = get_hbase_table(table_name)
     ret_file = []
     for key, value in table.scan():
-        print(key, value)
+
         jfile = {
             "time": key.decode("utf-8"),
             "data": value[b"s:data"].decode("utf-8"),
             "life_cycle": value[b"s:life_cycle"].decode("utf-8"),
             "task_id": value[b"s:task_id"].decode("utf-8"),
         }
-        print(jfile)
+
         ret_file.append(jfile)
     return ret_file
 
@@ -39,7 +39,6 @@ def save_to_hbase(data):
     date_row = now.isoformat()
     dict_data = json.loads(data)
 
-    print(data, type(data))
     with table.batch(timestamp=int(timestamp), transaction=True) as batch:
         batch.put(
             date_row,
