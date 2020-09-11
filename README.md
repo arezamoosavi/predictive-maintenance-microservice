@@ -27,3 +27,5 @@ http://localhost:8080/docs
 ## Result
 
 ![alt text](https://github.com/arezamoosavi/predictive-maintenance-microservice/blob/master/photo/kibana.jpeg?raw=true)
+
+## [Medium](https://medium.com/@sdamoosavi/ml-microservice-with-nameko-to-implement-a-predictive-maintenance-application-f59d4ed60be3)
